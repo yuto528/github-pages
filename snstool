@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>感情ログSNS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 672px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 30px;
+            font-weight: bold;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #6b7280;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            padding: 24px 24px 0 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .card-content {
+            padding: 24px;
+        }
+
+        .textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .stats {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+
+        .button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background-color: #2563eb;
+        }
+
+        .button:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .button-ghost {
+            background: none;
+            color: #ef4444;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .button-ghost:hover {
+            background-color: #fef2f2;
+        }
+
+        .post {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+            padding: 24px;
+            transition: box-shadow 0.2s;
+        }
+
+        .post:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .post-time {
+            font-size: 14px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .post-text {
+            color: #1f2937;
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+        }
+
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .badge {
+            background-color: #f3f4f6;
+            color: #374151;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: #6b7280;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+        }
+
+        .icon {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>感情ログSNS</h1>
+            <p>あなたの気持ちを記録しよう</p>
+        </div>
+
+        <!-- Input Card -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="icon">✏️</span>
+                    新しい投稿
+                </div>
+            </div>
+            <div class="card-content">
+                <textarea 
+                    id="inputText" 
+                    class="textarea" 
+                    placeholder="今どうしてる？気持ちを自由に書いてみて..."
+                ></textarea>
+                
+                <div id="typingStats" class="stats" style="display: none;">
+                    <span id="duration">入力時間: 0秒</span>
+                    <span id="backspaceCount">削除回数: 0</span>
+                    <span id="charCount">文字数: 0</span>
+                </div>
+
+                <button id="submitBtn" class="button" disabled>投稿する</button>
+            </div>
+        </div>
+
+        <!-- Posts List -->
+        <div>
+            <h2 class="section-title">投稿履歴</h2>
+            <div id="postsContainer">
+                <div class="card">
+                    <div class="card-content empty-state">
+                        まだ投稿がありません。最初の投稿をしてみましょう！
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class EmotionLogger {
+            constructor() {
+                this.inputText = '';
+                this.logs = [];
+                this.startTime = null;
+                this.backspaceCount = 0;
+                this.posts = [];
+                this.isTyping = false;
+
+                this.initializeElements();
+                this.bindEvents();
+            }
+
+            initializeElements() {
+                this.textarea = document.getElementById('inputText');
+                this.submitBtn = document.getElementById('submitBtn');
+                this.typingStats = document.getElementById('typingStats');
+                this.durationSpan = document.getElementById('duration');
+                this.backspaceSpan = document.getElementById('backspaceCount');
+                this.charCountSpan = document.getElementById('charCount');
+                this.postsContainer = document.getElementById('postsContainer');
+            }
+
+            bindEvents() {
+                this.textarea.addEventListener('input', (e) => this.handleInput(e));
+                this.textarea.addEventListener('focus', () => this.handleFocus());
+                this.submitBtn.addEventListener('click', () => this.handleSubmit());
+                
+                document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+            }
+
+            handleInput(e) {
+                this.inputText = e.target.value;
+                this.updateSubmitButton();
+                this.updateCharCount();
+            }
+
+            handleFocus() {
+                if (!this.startTime) {
+                    this.startTime = Date.now();
+                    this.isTyping = true;
+                    this.typingStats.style.display = 'flex';
+                    this.startStatsUpdate();
+                }
+            }
+
+            handleKeyDown(e) {
+                if (document.activeElement !== this.textarea) return;
+
+                if (!this.startTime) {
+                    this.startTime = Date.now();
+                    this.isTyping = true;
+                    this.typingStats.style.display = 'flex';
+                    this.startStatsUpdate();
+                }
+
+                if (e.key === 'Backspace') {
+                    this.backspaceCount++;
+                    this.updateBackspaceCount();
+                }
+
+                const timestamp = Date.now();
+                this.logs.push({ key: e.key, timestamp });
+            }
+
+            startStatsUpdate() {
+                this.statsInterval = setInterval(() => {
+                    if (this.isTyping) {
+                        this.updateDuration();
+                    }
+                }, 100);
+            }
+
+            updateSubmitButton() {
+                this.submitBtn.disabled = !this.inputText.trim();
+            }
+
+            updateDuration() {
+                if (this.startTime) {
+                    const elapsed = Date.now() - this.startTime;
+                    this.durationSpan.textContent = `入力時間: ${this.formatDuration(elapsed)}`;
+                }
+            }
+
+            updateBackspaceCount() {
+                this.backspaceSpan.textContent = `削除回数: ${this.backspaceCount}`;
+            }
+
+            updateCharCount() {
+                this.charCountSpan.textContent = `文字数: ${this.inputText.length}`;
+            }
+
+            handleSubmit() {
+                if (!this.inputText.trim()) return;
+
+                const endTime = Date.now();
+                const elapsed = this.startTime ? endTime - this.startTime : 0;
+
+                const newPost = {
+                    id: Date.now().toString(),
+                    text: this.inputText,
+                    log: this.logs,
+                    duration_ms: elapsed,
+                    backspaceCount: this.backspaceCount,
+                    createdAt: Date.now()
+                };
+
+                this.posts.unshift(newPost);
+                console.log('Post submitted:', newPost);
+
+                this.resetForm();
+                this.renderPosts();
+            }
+
+            resetForm() {
+                this.inputText = '';
+                this.textarea.value = '';
+                this.logs = [];
+                this.startTime = null;
+                this.backspaceCount = 0;
+                this.isTyping = false;
+
+                this.typingStats.style.display = 'none';
+                this.updateSubmitButton();
+                
+                if (this.statsInterval) {
+                    clearInterval(this.statsInterval);
+                }
+            }
+
+            deletePost(id) {
+                this.posts = this.posts.filter(post => post.id !== id);
+                this.renderPosts();
+            }
+
+            formatDuration(ms) {
+                const seconds = Math.floor(ms / 1000);
+                const minutes = Math.floor(seconds / 60);
+                if (minutes > 0) {
+                    return `${minutes}分${seconds % 60}秒`;
+                }
+                return `${seconds}秒`;
+            }
+
+            formatTime(timestamp) {
+                return new Date(timestamp).toLocaleTimeString('ja-JP', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            getTypingSpeed(post) {
+                if (post.duration_ms === 0) return 0;
+                const charactersPerMinute = (post.text.length / post.duration_ms) * 60000;
+                return Math.round(charactersPerMinute);
+            }
+
+            renderPosts() {
+                if (this.posts.length === 0) {
+                    this.postsContainer.innerHTML = `
+                        <div class="card">
+                            <div class="card-content empty-state">
+                                まだ投稿がありません。最初の投稿をしてみましょう！
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                this.postsContainer.innerHTML = this.posts.map(post => `
+                    <div class="post">
+                        <div class="post-header">
+                            <div class="post-time">
+                                <span class="icon">🕐</span>
+                                ${this.formatTime(post.createdAt)}
+                            </div>
+                            <button class="button-ghost" onclick="emotionLogger.deletePost('${post.id}')">
+                                🗑️
+                            </button>
+                        </div>
+                        <p class="post-text">${post.text}</p>
+                        <div class="badges">
+                            <span class="badge">入力時間: ${this.formatDuration(post.duration_ms)}</span>
+                            <span class="badge">削除回数: ${post.backspaceCount}</span>
+                            <span class="badge">入力速度: ${this.getTypingSpeed(post)}文字/分</span>
+                            <span class="badge">キー入力数: ${post.log.length}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Initialize the app
+        const emotionLogger = new EmotionLogger();
+    </script>
+</body>
+</html>
